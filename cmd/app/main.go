@@ -51,7 +51,7 @@ func main() {
 	log.SetFlags(0)
 	log.SetOutput(ioutil.Discard)
 	log.Println("Starting soul...")
-	app := fyneapp.NewWithID("org.standard.soul")
+	app := fyneapp.NewWithID("org.standard.soul.app")
 	app.Settings().SetTheme(theme.DarkTheme())
 
 	window := app.NewWindow("Fyne Notes")
