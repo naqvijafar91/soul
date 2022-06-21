@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/brianvoe/gofakeit/v6"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,8 +39,7 @@ func TestLoad(t *testing.T) {
 	for i := 0; i < folderCount; i++ {
 		now := time.Now()
 
-		folderName := gofakeit.Word()
-
+		folderName := uuid.NewString()
 		key := uuid.NewString()
 
 		repo, err := disk.NewNoteRepositoryWithDbAndLoadSim(db, folderName, key[:15], crypt.NewSoulEncrypter, crypt.NewSoulDecrypter, false, nil)
