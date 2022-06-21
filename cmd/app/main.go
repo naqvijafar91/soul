@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"os/signal"
 	"soul"
 	"soul/crypt"
 	"soul/disk"
 	"strings"
+	"syscall"
 
 	"fyne.io/fyne/v2"
 	fyneapp "fyne.io/fyne/v2/app"
@@ -16,8 +19,8 @@ import (
 
 const DefaultBaseScopeV1 = "soul-db-draft-v1/"
 
-func showHomePage(window fyne.Window, service *soul.NoteService) error {
-	notesUI := &soul.Home{Service: service}
+func showHomePage(window fyne.Window, service *soul.NoteService, loggedOutFunc func()) error {
+	notesUI := &soul.Home{Service: service, OnLoggedOut: loggedOutFunc}
 	canvas, err := notesUI.LoadDataAndBuildUI()
 	if err != nil {
 		return err
@@ -25,6 +28,17 @@ func showHomePage(window fyne.Window, service *soul.NoteService) error {
 
 	window.SetContent(canvas)
 	notesUI.RegisterKeys(window)
+
+	var gracefulStop = make(chan os.Signal)
+	signal.Notify(gracefulStop, syscall.SIGTERM)
+	signal.Notify(gracefulStop, syscall.SIGINT)
+	signal.Notify(gracefulStop, syscall.SIGQUIT)
+	go func() {
+		<-gracefulStop
+		notesUI.Logout()
+		os.Exit(0)
+	}()
+
 	return nil
 }
 
@@ -57,43 +71,55 @@ func main() {
 	window := app.NewWindow("Fyne Notes")
 	window.CenterOnScreen()
 
-	var onLoggedInFunc = func(folderName, password, updatedDbPath string, stayLoggedIn bool) error {
-		soul.StoreDbPath(app, updatedDbPath)
+	var onLoggedInFunc = func(logoutChan chan bool) func(folderName, password, updatedDbPath string, stayLoggedIn bool) error {
+		return func(folderName, password, updatedDbPath string, stayLoggedIn bool) error {
+			soul.StoreDbPath(app, updatedDbPath)
 
-		repo, err := setupDiskRepo(folderName, password, updatedDbPath)
-		if err != nil {
-			return err
-		}
-
-		if stayLoggedIn {
-			cryptor, err := crypt.NewCryptor(strings.TrimSpace(password))
+			repo, err := setupDiskRepo(folderName, password, updatedDbPath)
 			if err != nil {
-				return fmt.Errorf("failed to create cryptor %w", err)
+				return err
 			}
 
-			err = soul.SetCredentials(app, cryptor, &soul.Credentials{
-				Identifier: folderName,
-				Password:   password,
+			if stayLoggedIn {
+				cryptor, err := crypt.NewCryptor(strings.TrimSpace(password))
+				if err != nil {
+					return fmt.Errorf("failed to create cryptor %w", err)
+				}
+
+				err = soul.SetCredentials(app, cryptor, &soul.Credentials{
+					Identifier: folderName,
+					Password:   password,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to store credentials %w", err)
+				}
+			}
+
+			err = showHomePage(window, &soul.NoteService{
+				Repo: repo,
+			}, func() {
+				logoutChan <- true
 			})
 			if err != nil {
-				return fmt.Errorf("failed to store credentials %w", err)
+				return fmt.Errorf("failed to load home page ui %v", err)
 			}
-		}
 
-		err = showHomePage(window, &soul.NoteService{
-			Repo: repo,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to load home page ui %v", err)
+			return nil
 		}
-
-		return nil
 	}
+
+	logoutChan := make(chan bool)
+	go func() {
+		for {
+			<-logoutChan
+			showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
+		}
+	}()
 
 	if soul.IsSignedIn(app) {
 		showCheckInPage(window, func(password string, loginInstead bool) error {
 			if loginInstead {
-				showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc)
+				showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
 				return nil
 			}
 
@@ -113,7 +139,9 @@ func main() {
 				return err
 			}
 
-			err = showHomePage(window, &soul.NoteService{Repo: repo})
+			err = showHomePage(window, &soul.NoteService{Repo: repo}, func() {
+				showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
+			})
 			if err != nil {
 				return fmt.Errorf("failed to load home page ui %v", err)
 			}
@@ -121,7 +149,7 @@ func main() {
 			return nil
 		})
 	} else {
-		showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc)
+		showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
 	}
 
 	window.Resize(fyne.NewSize(1000, 600))

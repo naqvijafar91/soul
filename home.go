@@ -21,6 +21,7 @@ type Home struct {
 	textWidget   *widget.Entry
 	infoLabel    *widget.Label
 	listWidget   *widget.List
+	OnLoggedOut  func()
 }
 
 const DefaultInfo = "Welcome to your soul"
@@ -71,6 +72,18 @@ func (ui *Home) buildList(notes []Note) *widget.List {
 	return list
 }
 
+func (ui *Home) Logout() {
+	ui.Service.Notes = nil
+	ui.listWidget = nil
+	ui.textWidget = nil
+	ui.selectedNote = nil
+	ui.Text = nil
+	if ui.OnLoggedOut != nil {
+		runtime.GC()
+		ui.OnLoggedOut()
+	}
+}
+
 func (ui *Home) LoadDataAndBuildUI() (fyne.CanvasObject, error) {
 	ui.textWidget = widget.NewMultiLineEntry()
 	ui.textWidget.Wrapping = fyne.TextWrapWord
@@ -93,7 +106,7 @@ func (ui *Home) LoadDataAndBuildUI() (fyne.CanvasObject, error) {
 		ui.infoLabel.SetText("updating note.....")
 		defer func() {
 			ui.infoLabel.SetText(DefaultInfo)
-			
+
 			if ui.textWidget.Disabled() {
 				ui.textWidget.Enable()
 			}
@@ -118,6 +131,9 @@ func (ui *Home) LoadDataAndBuildUI() (fyne.CanvasObject, error) {
 		}),
 		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {
 			updateNote(ui.selectedNote, true)
+		}),
+		widget.NewToolbarAction(theme.LogoutIcon(), func() {
+			ui.Logout()
 		}),
 	)
 
