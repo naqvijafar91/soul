@@ -61,6 +61,7 @@ func setupDiskRepo(folderName, password, dbPath string) (soul.NoteRepository, er
 	return repo, nil
 }
 
+// TODO: Fix re-logging bug
 func main() {
 	log.SetFlags(0)
 	log.SetOutput(ioutil.Discard)

@@ -78,6 +78,7 @@ func (ui *Home) Logout() {
 	ui.textWidget = nil
 	ui.selectedNote = nil
 	ui.Text = nil
+	ui.Service.Repo = nil
 	if ui.OnLoggedOut != nil {
 		runtime.GC()
 		ui.OnLoggedOut()
