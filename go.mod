@@ -2,7 +2,6 @@ module soul
 
 go 1.15
 
-replace github.com/jonhadfield/gosn-v2 => ./../gosn-v2
 
 require (
 	fyne.io/fyne/v2 v2.2.1
