@@ -16,3 +16,6 @@ lint:
 	@echo ....
 
 	golint ./...
+
+load-test:
+	go test -timeout 180m -v -run ^TestLoad$  soul/disk -tags=analysis,load
