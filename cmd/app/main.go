@@ -68,7 +68,7 @@ func main() {
 	app := fyneapp.NewWithID("org.standard.soul.app")
 	app.Settings().SetTheme(theme.DarkTheme())
 
-	window := app.NewWindow("Fyne Notes")
+	window := app.NewWindow("Soul")
 	window.CenterOnScreen()
 
 	var onLoggedInFunc = func(logoutChan chan bool) func(folderName, password, updatedDbPath string, stayLoggedIn bool) error {

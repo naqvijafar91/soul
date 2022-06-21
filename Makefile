@@ -18,4 +18,4 @@ lint:
 	golint ./...
 
 load-test:
-	go test -timeout 180m -v -run ^TestLoad$  soul/disk -tags=analysis,load
+	go test -count=1 -timeout 180m -v -run ^TestLoad$  soul/disk -tags=analysis,load
