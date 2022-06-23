@@ -2,7 +2,6 @@ module soul
 
 go 1.15
 
-
 require (
 	fyne.io/fyne/v2 v2.2.1
 	github.com/boltdb/bolt v1.3.1

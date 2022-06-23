@@ -34,7 +34,7 @@ func TestLoad(t *testing.T) {
 
 	fmt.Println(db.GoString())
 	fmt.Println(db.String())
-	folderCount := 1000
+	folderCount := 5000
 
 	for i := 0; i < folderCount; i++ {
 		now := time.Now()
