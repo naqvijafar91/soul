@@ -50,7 +50,7 @@ func showLoginPage(window fyne.Window, currentDbPath string, onSubmitFunc func(e
 }
 
 func showCheckInPage(window fyne.Window, onSubmitFunc func(password string, loginInstead bool) error) {
-	canvasObj := soul.NewCheckInPage(window, onSubmitFunc)
+	canvasObj := myfyne.NewCheckInPage(window, onSubmitFunc)
 	window.SetContent(canvasObj)
 }
 

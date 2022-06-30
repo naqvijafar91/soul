@@ -1,4 +1,4 @@
-package soul
+package fyne
 
 import (
 	"fmt"
