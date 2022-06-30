@@ -1,8 +1,9 @@
-package soul
+package fyne
 
 import (
 	"fmt"
 	"runtime"
+	"soul"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -14,10 +15,10 @@ import (
 )
 
 type Home struct {
-	Text    *Note
-	Service *NoteService
+	Text    *soul.Note
+	Service *soul.NoteService
 
-	selectedNote *Note
+	selectedNote *soul.Note
 	textWidget   *widget.Entry
 	infoLabel    *widget.Label
 	listWidget   *widget.List
@@ -37,7 +38,7 @@ func (home *Home) addNote() error {
 	return nil
 }
 
-func (ui *Home) setNoteAndBind(n *Note) {
+func (ui *Home) setNoteAndBind(n *soul.Note) {
 	ui.textWidget.Unbind()
 	if n == nil {
 		ui.textWidget.SetText(ui.placeholderContent())
@@ -50,7 +51,7 @@ func (ui *Home) setNoteAndBind(n *Note) {
 	ui.selectedNote = n
 }
 
-func (ui *Home) buildList(notes []Note) *widget.List {
+func (ui *Home) buildList(notes []soul.Note) *widget.List {
 	list := widget.NewList(
 		func() int {
 			return len(ui.Service.Notes)
@@ -61,7 +62,7 @@ func (ui *Home) buildList(notes []Note) *widget.List {
 		func(id widget.ListItemID, obj fyne.CanvasObject) {
 			label := obj.(*widget.Label)
 			note := ui.Service.Notes[id]
-			label.Bind(note.title())
+			label.Bind(note.Title())
 		})
 
 	list.OnSelected = func(id widget.ListItemID) {
@@ -103,7 +104,7 @@ func (ui *Home) LoadDataAndBuildUI() (fyne.CanvasObject, error) {
 		ui.listWidget.Select(0)
 	}
 
-	var updateNote = func(note *Note, disableDuringOp bool) {
+	var updateNote = func(note *soul.Note, disableDuringOp bool) {
 		ui.infoLabel.SetText("updating note.....")
 		defer func() {
 			ui.infoLabel.SetText(DefaultInfo)
@@ -142,9 +143,9 @@ func (ui *Home) LoadDataAndBuildUI() (fyne.CanvasObject, error) {
 		bar, container.NewVScroll(ui.listWidget), ui.infoLabel)
 
 	// finally start our sync service
-	ss := NewSyncService(func() ([]Note, error) {
+	ss := soul.NewSyncService(func() ([]soul.Note, error) {
 		return ui.Service.Notes, nil
-	}, func(note *Note) error {
+	}, func(note *soul.Note) error {
 		updateNote(note, false)
 		return nil
 	}, func(err error) {

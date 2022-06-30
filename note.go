@@ -61,7 +61,7 @@ func NewNoteService(repo NoteRepository) *NoteService {
 	return &NoteService{Repo: repo}
 }
 
-func (note *Note) title() binding.String {
+func (note *Note) Title() binding.String {
 	return newTitleString(note.Text)
 }
 

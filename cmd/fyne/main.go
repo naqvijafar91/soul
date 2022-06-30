@@ -12,6 +12,8 @@ import (
 	"strings"
 	"syscall"
 
+	myfyne "soul/fyne"
+
 	"fyne.io/fyne/v2"
 	fyneapp "fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/theme"
@@ -20,7 +22,7 @@ import (
 const DefaultBaseScopeV1 = "soul-db-draft-v1/"
 
 func showHomePage(window fyne.Window, service *soul.NoteService, loggedOutFunc func()) error {
-	notesUI := &soul.Home{Service: service, OnLoggedOut: loggedOutFunc}
+	notesUI := &myfyne.Home{Service: service, OnLoggedOut: loggedOutFunc}
 	canvas, err := notesUI.LoadDataAndBuildUI()
 	if err != nil {
 		return err
@@ -43,7 +45,7 @@ func showHomePage(window fyne.Window, service *soul.NoteService, loggedOutFunc f
 }
 
 func showLoginPage(window fyne.Window, currentDbPath string, onSubmitFunc func(email, password, updatedDbPath string, stayLoggedIn bool) error) {
-	canvasObj := soul.NewLoginPage(currentDbPath, onSubmitFunc)
+	canvasObj := myfyne.NewLoginPage(currentDbPath, onSubmitFunc)
 	window.SetContent(canvasObj)
 }
 
