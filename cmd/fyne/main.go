@@ -71,12 +71,14 @@ func main() {
 	app := fyneapp.NewWithID("org.standard.soul.app")
 	app.Settings().SetTheme(theme.DarkTheme())
 
+	confStore := myfyne.NewFyneConfigStore(app)
+
 	window := app.NewWindow("Soul")
 	window.CenterOnScreen()
 
 	var onLoggedInFunc = func(logoutChan chan bool) func(folderName, password, updatedDbPath string, stayLoggedIn bool) error {
 		return func(folderName, password, updatedDbPath string, stayLoggedIn bool) error {
-			soul.StoreDbPath(app, updatedDbPath)
+			soul.StoreDbPath(confStore, updatedDbPath)
 
 			repo, err := setupDiskRepo(folderName, password, updatedDbPath)
 			if err != nil {
@@ -89,7 +91,7 @@ func main() {
 					return fmt.Errorf("failed to create cryptor %w", err)
 				}
 
-				err = soul.SetCredentials(app, cryptor, &soul.Credentials{
+				err = soul.SetCredentials(confStore, cryptor, &soul.Credentials{
 					Identifier: folderName,
 					Password:   password,
 				})
@@ -115,14 +117,14 @@ func main() {
 	go func() {
 		for {
 			<-logoutChan
-			showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
+			showLoginPage(window, soul.GetDBPath(confStore), onLoggedInFunc(logoutChan))
 		}
 	}()
 
-	if soul.IsSignedIn(app) {
+	if soul.IsSignedIn(confStore) {
 		showCheckInPage(window, func(password string, loginInstead bool) error {
 			if loginInstead {
-				showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
+				showLoginPage(window, soul.GetDBPath(confStore), onLoggedInFunc(logoutChan))
 				return nil
 			}
 
@@ -131,19 +133,19 @@ func main() {
 				return fmt.Errorf("failed to create cryptor %w", err)
 			}
 
-			credentials, err := soul.GetCredentials(app, cryptor)
+			credentials, err := soul.GetCredentials(confStore, cryptor)
 			if err != nil {
 				return fmt.Errorf("failed to extract credentials %w. You may try logging in instead", err)
 			}
 
 			// login use these credentials now
-			repo, err := setupDiskRepo(credentials.Identifier, credentials.Password, soul.GetDBPath(app))
+			repo, err := setupDiskRepo(credentials.Identifier, credentials.Password, soul.GetDBPath(confStore))
 			if err != nil {
 				return err
 			}
 
 			err = showHomePage(window, &soul.NoteService{Repo: repo}, func() {
-				showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
+				showLoginPage(window, soul.GetDBPath(confStore), onLoggedInFunc(logoutChan))
 			})
 			if err != nil {
 				return fmt.Errorf("failed to load home page ui %v", err)
@@ -152,7 +154,7 @@ func main() {
 			return nil
 		})
 	} else {
-		showLoginPage(window, soul.GetDBPath(app), onLoggedInFunc(logoutChan))
+		showLoginPage(window, soul.GetDBPath(confStore), onLoggedInFunc(logoutChan))
 	}
 
 	window.Resize(fyne.NewSize(1000, 600))

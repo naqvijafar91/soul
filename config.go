@@ -6,8 +6,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"strings"
-
-	"fyne.io/fyne/v2"
 )
 
 // Encrypter encrypts the data
@@ -20,6 +18,13 @@ type Decrypter interface {
 	Decrypt([]byte) ([]byte, error)
 }
 
+// ConfigStore stores configurations
+type ConfigStore interface {
+	SetString(string, string)
+	GetString(string) string
+	Delete(string)
+}
+
 // Credentials represents a user credential
 type Credentials struct {
 	Identifier string
@@ -30,22 +35,22 @@ const LocalCreditialsKeyName = "ENCRYPTED_DATA_MAIN"
 
 const DBPathKeyName = "DB_PATH"
 
-func StoreDbPath(app fyne.App, path string) {
-	app.Preferences().SetString(DBPathKeyName, path)
+func StoreDbPath(store ConfigStore, path string) {
+	store.SetString(DBPathKeyName, path)
 }
 
-func GetDBPath(app fyne.App) string {
-	return app.Preferences().String(DBPathKeyName)
+func GetDBPath(store ConfigStore) string {
+	return store.GetString(DBPathKeyName)
 }
 
 // IsSignedIn checks if the user is signed in locally
-func IsSignedIn(app fyne.App) bool {
-	encrypted := app.Preferences().String(LocalCreditialsKeyName)
+func IsSignedIn(store ConfigStore) bool {
+	encrypted := store.GetString(LocalCreditialsKeyName)
 	return strings.TrimSpace(encrypted) != ""
 }
 
-func GetCredentials(app fyne.App, decrypter Decrypter) (*Credentials, error) {
-	serializedData := app.Preferences().String(LocalCreditialsKeyName)
+func GetCredentials(store ConfigStore, decrypter Decrypter) (*Credentials, error) {
+	serializedData := store.GetString(LocalCreditialsKeyName)
 	if strings.TrimSpace(serializedData) == "" {
 		return nil, fmt.Errorf("credentials not found")
 	}
@@ -74,7 +79,7 @@ func GetCredentials(app fyne.App, decrypter Decrypter) (*Credentials, error) {
 	return credentials, nil
 }
 
-func SetCredentials(app fyne.App, encrypter Encrypter, credentials *Credentials) error {
+func SetCredentials(store ConfigStore, encrypter Encrypter, credentials *Credentials) error {
 	var encoded bytes.Buffer
 	encoder := gob.NewEncoder(&encoded)
 	err := encoder.Encode(*credentials)
@@ -87,7 +92,11 @@ func SetCredentials(app fyne.App, encrypter Encrypter, credentials *Credentials)
 		return fmt.Errorf("failed to encrypt %w", err)
 	}
 
-	app.Preferences().SetString(LocalCreditialsKeyName, base64.StdEncoding.EncodeToString(encrypted))
+	store.SetString(LocalCreditialsKeyName, base64.StdEncoding.EncodeToString(encrypted))
 
 	return nil
+}
+
+func DeleteCredentials(store ConfigStore) {
+	store.Delete(LocalCreditialsKeyName)
 }

@@ -7,3 +7,5 @@ notes.app
 notes.exe
 notes.ipa
 notes.tar.gz
+.env
+.vscode

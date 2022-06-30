@@ -1,4 +1,4 @@
-package soul_test
+package testhelpers
 
 import (
 	"fmt"
@@ -6,12 +6,11 @@ import (
 	"soul/crypt"
 	"testing"
 
-	fyneapp "fyne.io/fyne/v2/app"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetGetCredentials(t *testing.T) {
-	t.Parallel()
+func ExecuteConfigStoreTests(t *testing.T, configStore soul.ConfigStore) {
+	t.Helper()
 
 	testCreds := &soul.Credentials{
 		Identifier: "dummy@jsjsjsj2222jj2",
@@ -20,24 +19,22 @@ func TestSetGetCredentials(t *testing.T) {
 
 	// write data in a private scope
 	{
-		app := fyneapp.NewWithID("org.testing.soul")
-		app.Preferences().RemoveValue(soul.LocalCreditialsKeyName)
+		soul.DeleteCredentials(configStore)
 		cryptor, err := crypt.NewCryptor(testCreds.Password)
 		assert.Nil(t, err)
 
-		cred, err := soul.GetCredentials(app, cryptor)
+		cred, err := soul.GetCredentials(configStore, cryptor)
 		assert.Nil(t, cred)
 		assert.Equal(t, fmt.Errorf("credentials not found"), err)
 
 		// Set once and retrieve multiple times
-		assert.Nil(t, soul.SetCredentials(app, cryptor, testCreds))
+		assert.Nil(t, soul.SetCredentials(configStore, cryptor, testCreds))
 	}
 
 	for i := 0; i < 10; i++ {
-		app := fyneapp.NewWithID("org.testing.soul")
 		newCryptor, err := crypt.NewCryptor(testCreds.Password)
 		assert.Nil(t, err)
-		fetchedCreds, err := soul.GetCredentials(app, newCryptor)
+		fetchedCreds, err := soul.GetCredentials(configStore, newCryptor)
 		assert.Nil(t, err)
 		assert.Equal(t, testCreds, fetchedCreds)
 	}
