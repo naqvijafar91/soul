@@ -6,6 +6,7 @@ require (
 	fyne.io/fyne/v2 v2.2.1
 	github.com/boltdb/bolt v1.3.1
 	github.com/brianvoe/gofakeit/v6 v6.16.0
+	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.2
