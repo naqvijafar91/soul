@@ -1,0 +1,21 @@
+.sidebar {
+  transition: width 0.35s;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 60px auto;
+  border-right: var(--border);
+  border-left: var(--border);
+  overflow: auto;
+  width: 300px;
+
+  &.collapsed {
+    width: 0;
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 0 5px 15px;
+  border-bottom: var(--border);
+}
